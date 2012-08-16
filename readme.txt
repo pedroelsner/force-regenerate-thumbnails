@@ -31,6 +31,11 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
+= 1.1 =
+* Delete all custom image sizes when regenerate thumbnails
+* Alert when thumbnails was deleted 
+* Grant delete right thumbnails
+
 = 1.0 =
 * First release.
 

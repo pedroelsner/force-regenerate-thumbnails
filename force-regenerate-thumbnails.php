@@ -3,7 +3,7 @@
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Based in Regenerate Thumbnails, REALLY force the regenerate thumbnail. This is my small contribution. All credits and thanks to Viper007Bond
-Version:      1.0
+Version:      1.1
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
@@ -426,21 +426,43 @@ class ForceRegenerateThumbnails {
 		@set_time_limit(900);
         
         
+        
         /**
-         * My contribuition:
-         * Load all custom image sizes, delete all thumbs to force a REALLY regenerate
+         * Grant image deleted
+         * @since 1.1
          */
-        global $_wp_additional_image_sizes;
         $message = '';
         $imagePath = substr($fullsizepath, 0, strlen($fullsizepath) - 4);
         $imageFormat = substr($fullsizepath, -4);
-        foreach($_wp_additional_image_sizes as $key => $value) {
-        	$message .= sprintf('<br /> - ' . __("Thumbnail: %sx%s was regenerate.", 'force-regenerate-thumbnails'), $value['width'], $value['height']);
-            $thumbnail = $imagePath . '-' . $value['width'] . 'x' . $value['height'] . $imageFormat;
-            @unlink($thumbnail);
+        $dirPath = explode(DIRECTORY_SEPARATOR, $imagePath);
+        $imageName = sprintf("%s-", $dirPath[count($dirPath)-1]);
+        unset($dirPath[count($dirPath)-1]);
+        $dirPath = sprintf("%s%s", implode(DIRECTORY_SEPARATOR, $dirPath), DIRECTORY_SEPARATOR);
+        
+        // Read and delete files
+        $dir  = opendir($dirPath);
+        $files = array();
+        while ($file = readdir($dir)) {            
+            if (!(strrpos($file, $imageName) === false)) {
+                $thumbnail = explode($imageName, $file);
+                if ($thumbnail[0] == "") {
+                    $thumbnailFormat = substr($thumbnail[1], -4);
+                    $thumbnail = substr($thumbnail[1], 0, strlen($thumbnail[1]) - 4);
+                    $thumbnail = explode('x', $thumbnail);
+                    if (count($thumbnail) == 2) {
+                        if (is_numeric($thumbnail[0]) && is_numeric($thumbnail[1])) {
+                            $message .= sprintf('<br /> - ' . __("Thumbnail: %sx%s was deleted.", 'force-regenerate-thumbnails'), $thumbnail[0], $thumbnail[1]);
+                            @unlink($dirPath . $imageName . $thumbnail[0] . 'x' . $thumbnail[1] . $thumbnailFormat);
+                        }
+                    }
+                }
+            }
         }
         
         
+        /**
+         * Regenerate
+         */
 		$metadata = wp_generate_attachment_metadata($image->ID, $fullsizepath);
 
 		if (is_wp_error($metadata)) {
@@ -454,9 +476,8 @@ class ForceRegenerateThumbnails {
         }
         
 		wp_update_attachment_metadata($image->ID, $metadata);
-		$message = sprintf(__('<b>&quot;%1$s&quot; (ID %2$s): All thumbnails was successfully regenerated in %3$s seconds.</b>', 'force-regenerate-thumbnails') . $regenerate_status, esc_html(get_the_title($image->ID)), $image->ID, timer_stop()) . $message;
-		//die(json_encode(array('success' => sprintf(__('&quot;%1$s&quot; (ID %2$s) was all thumbnails successfully regenereted in %3$s seconds.', 'force-regenerate-thumbnails') . $regenerate_status, esc_html(get_the_title($image->ID)), $image->ID, timer_stop()))));
 		
+        $message = sprintf(__('<b>&quot;%1$s&quot; (ID %2$s): All thumbnails was successfully regenerated in %3$s seconds.</b>', 'force-regenerate-thumbnails') . $regenerate_status, esc_html(get_the_title($image->ID)), $image->ID, timer_stop()) . $message;
 		die(json_encode(array('success' => $message)));
 	}
 
