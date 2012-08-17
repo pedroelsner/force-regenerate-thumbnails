@@ -5,15 +5,13 @@ Tested up to: 3.4.1
 Stable tag: trunk
 Tags: force, regenerate thumbnails, thumbnail, thumbnails
 
-Based in Regenerate Thumbnails, REALLY force the regenerate thumbnail.
+Delete and REALLY force the regenerate thumbnail.
 
 == Description ==
 
-* Based in Regenerate Thumbnails. All credits and thanks to Viper007Bond
+* Based in plugin: Regenerate Thumbnails - All credits and thanks to Viper007Bond
 
-Force Regenerate Thumbnails allows you to REALLY regenerate the thumbnails for your image attachments.
-
-You can either regenerate the thumbnails for all image uploads, individual image uploads, or specific multiple image uploads.
+Force Regenerate Thumbnails allows you to delete all old images size and REALLY regenerate the thumbnails for your image attachments.
 
 See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-thumbnails/screenshots/) for more details.
 
