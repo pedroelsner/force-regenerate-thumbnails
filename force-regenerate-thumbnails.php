@@ -3,10 +3,29 @@
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Delete and REALLY force the regenerate thumbnail. Based in plugin: Regenerate Thumbnails - All credits and thanks to Viper007Bond
-Version:      1.3
+Version:      1.5
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
+
+
+/**
+ * Force GD for Image handle (WordPress 3.5 or better)
+ * Thanks (@nikcree)
+ */
+$version = get_bloginfo('version');
+if ($version >= 3.5) {
+	function ms_image_editor_default_to_gd_fix( $editors ) {
+        $gd_editor = 'WP_Image_Editor_GD';
+
+        $editors = array_diff( $editors, array( $gd_editor ) );
+        array_unshift( $editors, $gd_editor );
+
+        return $editors;
+    }
+    add_filter('wp_image_editors', 'ms_image_editor_default_to_gd_fix');
+} 
+
 
 
 /**
@@ -248,9 +267,9 @@ class ForceRegenerateThumbnails {
 	<h3 class="title"><?php _e('Process Information', 'force-regenerate-thumbnails'); ?></h3>
 
 	<p>
-		<?php printf(__('Total Images: %s', 'force-regenerate-thumbnails'), $count); ?><br />
-		<?php printf(__('Successes:: %s', 'force-regenerate-thumbnails'), '<span id="regenthumbs-debug-successcount">0</span>'); ?><br />
-		<?php printf(__('Failures: %s', 'force-regenerate-thumbnails'), '<span id="regenthumbs-debug-failurecount">0</span>'); ?>
+		<?php printf(__('Total: %s', 'force-regenerate-thumbnails'), $count); ?><br />
+		<?php printf(__('Success: %s', 'force-regenerate-thumbnails'), '<span id="regenthumbs-debug-successcount">0</span>'); ?><br />
+		<?php printf(__('Failure: %s', 'force-regenerate-thumbnails'), '<span id="regenthumbs-debug-failurecount">0</span>'); ?>
 	</p>
 
 	<ol id="regenthumbs-debuglist">

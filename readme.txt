@@ -1,7 +1,7 @@
 === Force Regenerate Thumbnails ===
 Contributors: Pedro Elsner
 Requires at least: 2.8
-Tested up to: 3.4.2
+Tested up to: 3.8
 Stable tag: trunk
 Tags: force, regenerate thumbnails, thumbnail, thumbnails
 
@@ -28,6 +28,12 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 2. You can resize specific multiples images using the checkboxes and the "Bulk Actions" dropdown
 
 == ChangeLog ==
+
+= 1.5 =
+* Reviewed some messages
+
+= 1.4 =
+* Change default image editor to GB in Wordpress 3.5+ (thanks @nikcree)
 
 = 1.3 =
 * Fix message error when WP_DEBUG in wp_config.php
