@@ -463,7 +463,7 @@ class ForceRegenerateThumbnails {
         	$thumbnails = array();
             $file_info = pathinfo($fullsizepath);
 
-            $message = realpath($fullsizepath);
+            $message = '<br /> - Original file: ' . realpath($fullsizepath);
 
             // Hack to find thumbnail
             $file_info['filename'] .= '-';
