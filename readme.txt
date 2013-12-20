@@ -9,11 +9,12 @@ Delete and REALLY force the regenerate thumbnail.
 
 == Description ==
 
-* Based in plugin: Regenerate Thumbnails - All credits and thanks to Viper007Bond
-
 Force Regenerate Thumbnails allows you to delete all old images size and REALLY regenerate the thumbnails for your image attachments.
 
 See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-thumbnails/screenshots/) for more details.
+
+* Regenerate Thumbnails improved - All credits and thanks to Viper007Bond
+
 
 == Installation ==
 
@@ -28,6 +29,9 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 2. You can resize specific multiples images using the checkboxes and the "Bulk Actions" dropdown
 
 == ChangeLog ==
+
+= 1.6 =
+* New CORE to regenerate thumbnails
 
 = 1.5 =
 * Reviewed some messages
