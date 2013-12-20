@@ -30,6 +30,9 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
+= 1.7 =
+* Fix issue with getters path in Linux/Windows/Unix servers
+
 = 1.6 =
 * New CORE to regenerate thumbnails
 

@@ -3,7 +3,7 @@
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Delete and REALLY force the regenerate thumbnail.
-Version:      1.6
+Version:      1.7
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
@@ -438,10 +438,14 @@ class ForceRegenerateThumbnails {
             	return;
         	}
 
-			$fullsizepath = get_attached_file($image->ID);
+			$image_fullpath = get_attached_file($image->ID);
+			$upload_dir = get_option('upload_path');
+			if ((strrpos($image_fullpath, $upload_dir) === false)) {
+				$image_fullpath = realpath($upload_dir . DIRECTORY_SEPARATOR . $image_fullpath);
+			}
 
-			if (false === $fullsizepath || !file_exists($fullsizepath)) {
-				$this->die_json_error_msg($image->ID, sprintf( __('<span style="color: #FF3366;">The originally uploaded image file cannot be found at %s</span>', 'force-regenerate-thumbnails'), '<code>' . esc_html($fullsizepath) . '</code>'));
+			if (false === $image_fullpath || !file_exists($image_fullpath)) {
+				$this->die_json_error_msg($image->ID, sprintf( __('<span style="color: #FF3366;">The originally uploaded image file cannot be found at %s</span>', 'force-regenerate-thumbnails'), '<code>' . esc_html($image_fullpath) . '</code>'));
             	return;
         	}
         
@@ -461,9 +465,9 @@ class ForceRegenerateThumbnails {
         	 * New CORE 1.6 version
         	 */
         	$thumbnails = array();
-            $file_info = pathinfo($fullsizepath);
+            $file_info = pathinfo($image_fullpath);
 
-            $message = '<br /> - Original file: ' . realpath($fullsizepath);
+            $message = '<br /> - Original file: ' . realpath($image_fullpath);
 
             // Hack to find thumbnail
             $file_info['filename'] .= '-';
@@ -491,7 +495,7 @@ class ForceRegenerateThumbnails {
         	/**
          	 * Regenerate
          	 */
-			$metadata = wp_generate_attachment_metadata($image->ID, $fullsizepath);
+			$metadata = wp_generate_attachment_metadata($image->ID, $image_fullpath);
 
 			if (is_wp_error($metadata)) {
 				$this->die_json_error_msg($image->ID, $metadata->get_error_message());
