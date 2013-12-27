@@ -3,7 +3,7 @@
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Delete and REALLY force the regenerate thumbnail.
-Version:      1.7
+Version:      1.8
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
@@ -347,6 +347,7 @@ class ForceRegenerateThumbnails {
 			function RegenThumbs(id) {
 				$.ajax({
 					type: 'POST',
+					cache: false,
 					url: ajaxurl,
 					data: { action: "regeneratethumbnail", id: id },
 					success: function(response) {
@@ -418,48 +419,58 @@ class ForceRegenerateThumbnails {
 	function ajax_process_image() {
 
 		// Don't break the JSON result
-		@error_reporting(0);
-
+		error_reporting(0);		
+		$id = (int) $_REQUEST['id'];
 
 		try {
 
 			header('Content-type: application/json');
-
-			$id = (int) $_REQUEST['id'];
 			$image = get_post($id);
+			
+			if (is_null($image)) {
+				$this->die_json_failure_msg($id, sprintf(__('<b><span style="color: #FF3366;">Failed: %s is an invalid image ID.</span></b>', 'force-regenerate-thumbnails'), esc_html($_REQUEST['id'])));
+            	exit; 
+			}
 
-			if (!$image || 'attachment' != $image->post_type || 'image/' != substr($image->post_mime_type, 0, 6)) {
-				die(json_encode(array('error' => sprintf(__('<span style="color: #FF3366;">Failed: %s is an invalid image ID.</span>', 'force-regenerate-thumbnails'), esc_html($_REQUEST['id'])))));
-            	return; 
+			if ('attachment' != $image->post_type || 'image/' != substr($image->post_mime_type, 0, 6)) {
+				$this->die_json_failure_msg($id, sprintf(__('<b><span style="color: #FF3366;">Failed: %s is an invalid image ID.</span></b>', 'force-regenerate-thumbnails'), esc_html($_REQUEST['id'])));
+            	exit; 
         	}
 
 			if (!current_user_can($this->capability)) {
-				$this->die_json_error_msg($image->ID, __('<span style="color: #FF3366;">Your user account does not have permission to regenerate images</span>', 'force-regenerate-thumbnails'));
-            	return;
+				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">Your user account does not have permission to regenerate images</span></b>', 'force-regenerate-thumbnails'));
+            	exit;
         	}
 
+
+        	// Get original image
 			$image_fullpath = get_attached_file($image->ID);
+
+			if (false === $image_fullpath) {
+				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">The originally uploaded image file cannot be found</span></b>', 'force-regenerate-thumbnails'));
+            	exit;
+			}
+
+			if (strlen($image_fullpath) == 0) {
+				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">The originally uploaded image file cannot be found</span></b>', 'force-regenerate-thumbnails'));
+            	exit;
+			}
+
 			$upload_dir = get_option('upload_path');
 			if ((strrpos($image_fullpath, $upload_dir) === false)) {
 				$image_fullpath = realpath($upload_dir . DIRECTORY_SEPARATOR . $image_fullpath);
 			}
 
-			if (false === $image_fullpath || !file_exists($image_fullpath)) {
-				$this->die_json_error_msg($image->ID, sprintf( __('<span style="color: #FF3366;">The originally uploaded image file cannot be found at %s</span>', 'force-regenerate-thumbnails'), '<code>' . esc_html($image_fullpath) . '</code>'));
-            	return;
+			if (!file_exists($image_fullpath)) {
+				$this->die_json_error_msg($image->ID, sprintf( __('<b><span style="color: #FF3366;">The originally uploaded image file cannot be found at %s</span></b>', 'force-regenerate-thumbnails'), '<code>' . esc_html($image_fullpath) . '</code>'));
+            	exit;
         	}
         
-        	// 5 minutes per image should be PLENTY
-			@set_time_limit(900);
-        
-        	
-	        
-        	/**
-         	* Grant image deleted
-         	* @since 1.1
-         	*/
-        	$message = '';
 
+        	// 5 minutes per image should be PLENTY
+			set_time_limit(900);
+
+        	$thumbnails_deleted = array();
 
         	/**
         	 * New CORE 1.6 version
@@ -467,7 +478,6 @@ class ForceRegenerateThumbnails {
         	$thumbnails = array();
             $file_info = pathinfo($image_fullpath);
 
-            $message = '<br /> - Original file: ' . realpath($image_fullpath);
 
             // Hack to find thumbnail
             $file_info['filename'] .= '-';
@@ -482,8 +492,8 @@ class ForceRegenerateThumbnails {
         	        	$dimension_thumb = explode('x', $valid_thumb[1]);
         	        	if (count($dimension_thumb) == 2) {
         	        		if (is_numeric($dimension_thumb[0]) && is_numeric($dimension_thumb[1])) {
-        	        			$message .= sprintf('<br /> - ' . __("Thumbnail: %sx%s was deleted.", 'force-regenerate-thumbnails'), $dimension_thumb[0], $dimension_thumb[1]);
-        	        			@unlink(realpath($thumb_fullpath));
+        	        			$thumbnails_deleted[] = sprintf("%sx%s", $dimension_thumb[0], $dimension_thumb[1]);
+        	        			unlink(realpath($thumb_fullpath));
         	        		}
         	        	}
         	        }
@@ -499,23 +509,44 @@ class ForceRegenerateThumbnails {
 
 			if (is_wp_error($metadata)) {
 				$this->die_json_error_msg($image->ID, $metadata->get_error_message());
-            	return;
+            	exit;
         	}
 
 			if (empty($metadata)) {
-				$this->die_json_error_msg($image->ID, __('<span style="color: #FF3366;">Unknown failure reason.</span>', 'force-regenerate-thumbnails'));
-            	return;
+				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">Unknown failure reason.</span></b>', 'force-regenerate-thumbnails'));
+            	exit;
         	}
 	        
 			wp_update_attachment_metadata($image->ID, $metadata);
-
-        	$message = sprintf(__('<b>&quot;%1$s&quot; (ID %2$s): All thumbnails was successfully regenerated in %3$s seconds.</b>', 'force-regenerate-thumbnails'), esc_html(get_the_title($image->ID)), $image->ID, timer_stop()) . $message;
-			die(json_encode(array('success' => $message)));
+			$this->die_json_success_msg($image->ID, $image_fullpath, $thumbnails_deleted);
+			exit;
 
 		} catch (Exception $e) {
-  			die(json_encode(array('error' => "Fatal Error: " . $e->getMessage())));
+			$this->die_json_failure_msg($id, '<b><span style="color: #FF3366;">Fatal Error: ' . $e->getMessage() . '</span></b>');
+  			exit;
 		}
 	}
+
+	/**
+	 * Helper to make a JSON success message
+	 *
+	 * @param integer $id
+	 * @param array $thumbnails_deleted
+	 * @access public
+	 * @since 1.8
+	 */
+	function die_json_success_msg($id, $image_fullpath, $thumbnails_deleted) {
+		$message  = sprintf(__('<b>&quot;%s&quot; (ID %s)</b>', 'force-regenerate-thumbnails'), esc_html(get_the_title($id)), $id);
+		$message .= sprintf(__('<br />Original image: %s', 'force-regenerate-thumbnails'), $image_fullpath);
+		if (is_array($thumbnails_deleted)) {
+			if (count($thumbnails_deleted) > 0) {
+				$message .= sprintf(__('<br />Deleted thumbnails: %s', 'force-regenerate-thumbnails'), implode(', ', $thumbnails_deleted));	
+			}
+		}
+		$message .=	sprintf(__('<br /><b>All thumbnails was successfully regenerated in %s seconds</b>', 'force-regenerate-thumbnails'), timer_stop());
+		die(json_encode(array('success' => $message)));
+	}
+
 
 	/**
 	 * Helper to make a JSON error message
@@ -526,7 +557,19 @@ class ForceRegenerateThumbnails {
 	 * @since 1.0
 	 */
 	function die_json_error_msg($id, $message) {
-		die(json_encode(array('error' => sprintf(__('&quot;%1$s&quot; (ID %2$s) failed to resize. The error message was: %3$s', 'force-regenerate-thumbnails'), esc_html(get_the_title($id)), $id, $message))));
+		die(json_encode(array('error' => sprintf(__('&quot;%s&quot; (ID %s)<br />%s', 'force-regenerate-thumbnails'), esc_html(get_the_title($id)), $id, $message))));
+	}
+
+	/**
+	 * Helper to make a JSON failure message
+	 *
+	 * @param integer $id
+	 * @param string #message
+	 * @access public
+	 * @since 1.8
+	 */
+	function die_json_failure_msg($id, $message) {
+		die(json_encode(array('error' => sprintf(__('(ID %s)<br />%s', 'force-regenerate-thumbnails'), $id, $message))));
 	}
 
 	/**

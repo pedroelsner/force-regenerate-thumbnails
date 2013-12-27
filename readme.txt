@@ -30,6 +30,9 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
+= 1.8 =
+* New function to display ajax results
+
 = 1.7 =
 * Fix issue with getters path in Linux/Windows/Unix servers
 
