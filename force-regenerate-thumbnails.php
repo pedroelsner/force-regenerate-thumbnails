@@ -3,7 +3,7 @@
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Delete and REALLY force the regenerate thumbnail.
-Version:      2.0.0
+Version:      2.0.1
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
@@ -12,6 +12,8 @@ Author URI:   http://www.pedroelsner.com/
 /**
  * Force GD for Image handle (WordPress 3.5 or better)
  * Thanks (@nikcree)
+ * 
+ * @since 1.5
  */
 $version = get_bloginfo('version');
 if ($version >= 3.5) {
@@ -410,6 +412,7 @@ class ForceRegenerateThumbnails {
 <?php
 	}
 
+
 	/**
 	 * Process a single image ID (this is an AJAX handler)
 	 * 
@@ -419,53 +422,58 @@ class ForceRegenerateThumbnails {
 	function ajax_process_image() {
 
 		// Don't break the JSON result
-		error_reporting(0);		
+		error_reporting(0);
 		$id = (int) $_REQUEST['id'];
 
 		try {
 
 			header('Content-type: application/json');
 			$image = get_post($id);
-			
+
 			if (is_null($image)) {
-				$this->die_json_failure_msg($id, sprintf(__('<b><span style="color: #FF3366;">Failed: %s is an invalid image ID.</span></b>', 'force-regenerate-thumbnails'), esc_html($_REQUEST['id'])));
-            	exit; 
+				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
 			}
 
 			if ('attachment' != $image->post_type || 'image/' != substr($image->post_mime_type, 0, 6)) {
-				$this->die_json_failure_msg($id, sprintf(__('<b><span style="color: #FF3366;">Failed: %s is an invalid image ID.</span></b>', 'force-regenerate-thumbnails'), esc_html($_REQUEST['id'])));
-            	exit; 
+				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
         	}
 
 			if (!current_user_can($this->capability)) {
-				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">Your user account does not have permission to regenerate images</span></b>', 'force-regenerate-thumbnails'));
-            	exit;
+				throw new Exception(__('Your user account does not have permission to regenerate images.', 'force-regenerate-thumbnails'));
         	}
-
 
         	// Get original image
 			$image_fullpath = get_attached_file($image->ID);
 
 			if (false === $image_fullpath) {
-				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">The originally uploaded image file cannot be found</span></b>', 'force-regenerate-thumbnails'));
-            	exit;
+				throw new Exception(__('The originally uploaded image file cannot be found.', 'force-regenerate-thumbnails'));
 			}
 
 			if (strlen($image_fullpath) == 0) {
-				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">The originally uploaded image file cannot be found</span></b>', 'force-regenerate-thumbnails'));
-            	exit;
+				throw new Exception(__('The originally uploaded image file cannot be found.', 'force-regenerate-thumbnails'));
 			}
 
 
-			if ((strrpos($image_fullpath, get_option('upload_path')) === false)) {
-				$image_fullpath = realpath(get_option('upload_path') . DIRECTORY_SEPARATOR . $image_fullpath);
+			/**
+			 * Fix for get_option('upload_path')
+			 * Thanks (@DavidLingren)
+			 * 
+			 * @since 2.0.1
+			 */
+			$upload_dir = wp_upload_dir();
+			$upload_dir['basedir'];
+
+			if ((strrpos($image_fullpath, $upload_dir['basedir']) === false)) {
+				$image_fullpath = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . $image_fullpath;
+			}
+
+			if (realpath($image_fullpath) === false) {
+				throw new Exception(sprintf(__('The originally uploaded image file cannot be found at &quot;%s&quot;.', 'force-regenerate-thumbnails'), esc_html((string) $image_fullpath)));
 			}
 
 			if (!file_exists($image_fullpath)) {
-				$this->die_json_error_msg($image->ID, sprintf( __('<b><span style="color: #FF3366;">The originally uploaded image file cannot be found at %s</span></b>', 'force-regenerate-thumbnails'), '<code>' . esc_html($image_fullpath) . '</code>'));
-            	exit;
+				throw new Exception(sprintf(__('The originally uploaded image file cannot be found at &quot;%s&quot;.', 'force-regenerate-thumbnails'), esc_html((string) $image_fullpath)));
         	}
-        
 
         	// 5 minutes per image should be PLENTY
 			set_time_limit(900);
@@ -474,13 +482,22 @@ class ForceRegenerateThumbnails {
         	$deleted_error = array();
 
         	/**
-        	 * New CORE 1.6 version
+        	 * New CORE
+        	 * 
+        	 * @since 1.6
         	 */
         	$thumbnails = array();
             $file_info = pathinfo($image_fullpath);
 
 
-            // Hack to find thumbnail
+            /*
+             * Verify thumbnail in POSTS
+            $posts = array();
+            $guid = explode($file_info['filename'], $image->guid);
+            $guid = $guid[0];
+			*/
+
+			// Hack to find thumbnail
             $file_info['filename'] .= '-';
             $files = array();
 
@@ -500,8 +517,8 @@ class ForceRegenerateThumbnails {
         	       	$dimension_thumb = explode('x', $valid_thumb[1]);
         	       	if (count($dimension_thumb) == 2) {
         	       		if (is_numeric($dimension_thumb[0]) && is_numeric($dimension_thumb[1])) {
-        	       			unlink(realpath($thumb_fullpath));
-        	       			if (!file_exists(realpath($thumb_fullpath))) {
+        	       			unlink($thumb_fullpath);
+        	       			if (!file_exists($thumb_fullpath)) {
         	       				$deleted_success[] = sprintf("%sx%s", $dimension_thumb[0], $dimension_thumb[1]);
         					} else {
         						$deleted_error[] = sprintf("%sx%s", $dimension_thumb[0], $dimension_thumb[1]);
@@ -511,7 +528,6 @@ class ForceRegenerateThumbnails {
         	    }
             }
             
-
         
         	/**
          	 * Regenerate
@@ -524,18 +540,17 @@ class ForceRegenerateThumbnails {
         	}
 
 			if (empty($metadata)) {
-				$this->die_json_error_msg($image->ID, __('<b><span style="color: #FF3366;">Unknown failure reason.</span></b>', 'force-regenerate-thumbnails'));
-            	exit;
+				throw new Exception(__('Unknown failure reason.', 'force-regenerate-thumbnails'));
         	}
 	        
 			wp_update_attachment_metadata($image->ID, $metadata);
 			$this->die_json_end_with_success($image->ID, $image_fullpath, $deleted_success, $deleted_error);
-			exit;
-
+				
 		} catch (Exception $e) {
-			$this->die_json_failure_msg($id, '<b><span style="color: #FF3366;">Fatal Error: ' . $e->getMessage() . '</span></b>');
-  			exit;
+			$this->die_json_failure_msg($id, '<b><span style="color: #FF3366;">' . $e->getMessage() . '</span></b>');
 		}
+
+		exit;
 	}
 
 	/**
@@ -557,8 +572,9 @@ class ForceRegenerateThumbnails {
 		}
 		if (is_array($deleted_error)) {
 			if (count($deleted_error) > 0) {
+				$upload_dir = wp_upload_dir();
 				$message .= sprintf(__('<br /><b><span style="color: #FF3366;">Deleted error: %s</span></b>', 'force-regenerate-thumbnails'), implode(', ', $deleted_error));
-				$message .= sprintf(__('<br /><span style="color: #FF3366;">Please, check the folder permission (chmod 777): %s</span>', 'force-regenerate-thumbnails'), get_option('upload_path'));
+				$message .= sprintf(__('<br /><span style="color: #FF3366;">Please, check the folder permission (chmod 777): %s</span>', 'force-regenerate-thumbnails'), $upload_dir['basedir']);
 			}
 		}
 		$message .=	sprintf(__('<br /><b>All thumbnails was successfully regenerated in %s seconds</b>', 'force-regenerate-thumbnails'), timer_stop());
@@ -612,5 +628,6 @@ function ForceRegenerateThumbnails() {
 	$ForceRegenerateThumbnails = new ForceRegenerateThumbnails();
 }
 add_action('init', 'ForceRegenerateThumbnails');
+
 
 ?>

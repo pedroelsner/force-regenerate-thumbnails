@@ -30,6 +30,12 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
+= 2.0.1 =
+* Fix issue with get_option('upload_path') in Wordpress 3.5+ (thanks @DavidLingren)
+
+= 2.0.0 = 
+* Fix error handle
+
 = 1.8 =
 * New function to display ajax results
 
