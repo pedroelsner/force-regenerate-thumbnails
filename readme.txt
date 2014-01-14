@@ -13,9 +13,6 @@ Force Regenerate Thumbnails allows you to delete all old images size and REALLY 
 
 See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-thumbnails/screenshots/) for more details.
 
-* Regenerate Thumbnails improved - All credits and thanks to Viper007Bond
-
-
 == Installation ==
 
 1. Go to your admin area and select Plugins -> Add new from the menu.
@@ -29,6 +26,10 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 2. You can resize specific multiples images using the checkboxes and the "Bulk Actions" dropdown
 
 == ChangeLog ==
+
+= 2.0.2 =
+* New style for results (thanks @justonarnar)
+* Automatic update "_wp_attachment_metadata" and "_wp_attached_file" (thanks @norecipes)
 
 = 2.0.1 =
 * Fix issue with get_option('upload_path') in Wordpress 3.5+ (thanks @DavidLingren)
