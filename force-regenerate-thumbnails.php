@@ -3,7 +3,7 @@
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Delete and REALLY force the regenerate thumbnail.
-Version:      2.0.2
+Version:      2.0.3
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
@@ -462,6 +462,10 @@ class ForceRegenerateThumbnails {
             
             // Get original image
             $image_fullpath = get_attached_file($image->ID);
+            $debug_1 = $image_fullpath;
+            $debug_2 = '';
+            $debug_3 = '';
+            $debug_4 = '';
             
             
             // Can't get image path
@@ -470,6 +474,7 @@ class ForceRegenerateThumbnails {
                 // Try get image path from url
                 if ((strrpos($image->guid, $upload_dir['baseurl']) !== false)) {
                     $image_fullpath = realpath($upload_dir['basedir'] . DIRECTORY_SEPARATOR . substr($image->guid, strlen($upload_dir['baseurl']), strlen($image->guid)));
+                    $debug_2 = $image_fullpath;
                     if (realpath($image_fullpath) === false) {
                         throw new Exception(sprintf(__('The originally uploaded image file cannot be found at &quot;%s&quot;.', 'force-regenerate-thumbnails'), esc_html((string) $image_fullpath)));
                     }
@@ -482,14 +487,18 @@ class ForceRegenerateThumbnails {
             // Image path incomplete
             if ((strrpos($image_fullpath, $upload_dir['basedir']) === false)) {
                 $image_fullpath = $upload_dir['basedir'] . DIRECTORY_SEPARATOR . $image_fullpath;
+                $debug_3 = $image_fullpath;
             }
             
+           
+
             // Image don't exists
             if (!file_exists($image_fullpath) || realpath($image_fullpath) === false) {
             
                 // Try get image path from url
                 if ((strrpos($image->guid, $upload_dir['baseurl']) !== false)) {
                     $image_fullpath = realpath($upload_dir['basedir'] . DIRECTORY_SEPARATOR . substr($image->guid, strlen($upload_dir['baseurl']), strlen($image->guid)));
+                    $debug_4 = $image_fullpath;
                     if (realpath($image_fullpath) === false) {
                         throw new Exception(sprintf(__('The originally uploaded image file cannot be found at &quot;%s&quot;.', 'force-regenerate-thumbnails'), esc_html((string) $image_fullpath)));
                     }
@@ -506,7 +515,7 @@ class ForceRegenerateThumbnails {
              *
              * @since 2.0.2
              */
-            update_attached_file($image->ID, realpath($image_fullpath));
+            update_attached_file($image->ID, $image_fullpath);
 
 
             // Results
@@ -609,7 +618,19 @@ class ForceRegenerateThumbnails {
              * Display results
              */
             $message  = sprintf(__('<b>&quot;%s&quot; (ID %s)</b>', 'force-regenerate-thumbnails'), esc_html(get_the_title($id)), $image->ID);
-			$message .= sprintf(__('<br />Original image: %s', 'force-regenerate-thumbnails'), $image_fullpath);
+			
+
+			$message .= "<br /><br />";
+			$message .= sprintf(__("<code>BaseDir: %s</code><br />", 'force-regenerate-thumbnails'), $upload_dir['basedir']);
+			$message .= sprintf(__("<code>BaseUrl: %s</code><br />", 'force-regenerate-thumbnails'), $upload_dir['baseurl']);
+			$message .= sprintf(__("<code>Image: %s</code><br />", 'force-regenerate-thumbnails'), $debug_1);
+			if ($debug_2 != '')
+				$message .= sprintf(__("<code>Image Debug 2: %s</code><br />", 'force-regenerate-thumbnails'), $debug_2);
+			if ($debug_3 != '')
+				$message .= sprintf(__("<code>Image Debug 3: %s</code><br />", 'force-regenerate-thumbnails'), $debug_3);
+			if ($debug_4 != '')
+				$message .= sprintf(__("<code>Image Debug 4: %s</code><br />", 'force-regenerate-thumbnails'), $debug_4);
+
 			if (count($thumb_deleted) > 0) {
 				$message .= sprintf(__('<br />Deleted: %s', 'force-regenerate-thumbnails'), implode(', ', $thumb_deleted));	
 			}

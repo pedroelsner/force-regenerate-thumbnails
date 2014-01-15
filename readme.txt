@@ -27,6 +27,10 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
+= 2.0.3 =
+* Add debug information on regenerate
+* Fix issue with update "_wp_attachment_metadata" and "_wp_attached_file" on windows
+
 = 2.0.2 =
 * New style for results (thanks @justonarnar)
 * Automatic update "_wp_attachment_metadata" and "_wp_attached_file" (thanks @norecipes)
