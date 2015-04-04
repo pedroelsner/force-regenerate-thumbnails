@@ -359,6 +359,14 @@ class ForceRegenerateThumbnails {
 					url: ajaxurl,
 					data: { action: "regeneratethumbnail", id: id },
 					success: function(response) {
+						
+						//Catch unknown error
+						if(response === null) {
+							response = {};
+							response.success = false;
+							response.error = 'Unknown error occured.';
+						}
+
 						if (response.success) {
 							RegenThumbsUpdateStatus(id, true, response);
 						} else {
