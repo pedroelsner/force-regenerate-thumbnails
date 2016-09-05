@@ -1,7 +1,7 @@
 === Force Regenerate Thumbnails ===
 Contributors: Pedro Elsner
 Requires at least: 2.8
-Tested up to: 3.8
+Tested up to: 4.0
 Stable tag: trunk
 Tags: force, regenerate thumbnails, thumbnail, thumbnails
 
@@ -27,6 +27,9 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
+= 2.0.4 =
+* Add PHP7 compatibility
+
 = 2.0.3 =
 * Add debug information on regenerate
 * Fix issue with update "_wp_attachment_metadata" and "_wp_attached_file" on windows
@@ -38,7 +41,7 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 = 2.0.1 =
 * Fix issue with get_option('upload_path') in Wordpress 3.5+ (thanks @DavidLingren)
 
-= 2.0.0 = 
+= 2.0.0 =
 * Fix error handle
 
 = 1.8 =
@@ -64,7 +67,7 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 = 1.1 =
 * Delete all custom image sizes when regenerate thumbnails
-* Notifies you when thumbnails was deleted 
+* Notifies you when thumbnails was deleted
 
 = 1.0 =
 * First release.
