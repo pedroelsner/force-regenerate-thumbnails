@@ -1,9 +1,10 @@
 <?php
+
 /*
 Plugin Name:  Force Regenerate Thumbnails
 Plugin URI:   http://pedroelsner.com/2012/08/forcando-a-atualizacao-de-thumbnails-no-wordpress
 Description:  Delete and REALLY force the regenerate thumbnail.
-Version:      2.0.3
+Version:      2.0.6
 Author:       Pedro Elsner
 Author URI:   http://www.pedroelsner.com/
 */
@@ -366,7 +367,7 @@ class ForceRegenerateThumbnails {
 							response.success = false;
 							response.error = 'Unknown error occured.';
 						}
-
+						
 						if (response.success) {
 							RegenThumbsUpdateStatus(id, true, response);
 						} else {
@@ -435,14 +436,14 @@ class ForceRegenerateThumbnails {
 	 */
 	function ajax_process_image() {
 
+		// No timeout limit
+		set_time_limit(0);
+	
 		// Don't break the JSON result
 		error_reporting(0);
 		$id = (int) $_REQUEST['id'];
 
 		try {
-            
-            // 5 minutes per image should be PLENTY
-			set_time_limit(900);
             
 			header('Content-type: application/json');
 			$image = get_post($id);
@@ -542,16 +543,19 @@ class ForceRegenerateThumbnails {
          	 */
             $files = array();
             $path = opendir($file_info['dirname']);
-            while (false !== ($thumb = readdir($path))) {
-            	if (!(strrpos($thumb, $file_info['filename']) === false)) {
-            		$files[] = $thumb;
-            	}
+
+            if ( false !== $path ) {
+                while (false !== ($thumb = readdir($path))) {
+                    if (!(strrpos($thumb, $file_info['filename']) === false)) {
+                        $files[] = $thumb;
+                    }
+                }
+                closedir($path);
+                sort($files);
             }
-			closedir($path);
-			sort($files);
-			foreach ($files as $thumb) {
-            	$thumb_fullpath = $file_info['dirname'] . DIRECTORY_SEPARATOR . $thumb;
-            	$thumb_info = pathinfo($thumb_fullpath);
+            foreach ($files as $thumb) {
+                $thumb_fullpath = $file_info['dirname'] . DIRECTORY_SEPARATOR . $thumb;
+                $thumb_info = pathinfo($thumb_fullpath);
             	$valid_thumb = explode($file_info['filename'], $thumb_info['filename']);
         	    if ($valid_thumb[0] == "") {
         	       	$dimension_thumb = explode('x', $valid_thumb[1]);
@@ -587,14 +591,16 @@ class ForceRegenerateThumbnails {
              */
             $files = array();
             $path = opendir($file_info['dirname']);
-            while (false !== ($thumb = readdir($path))) {
-            	if (!(strrpos($thumb, $file_info['filename']) === false)) {
-            		$files[] = $thumb;
-            	}
+            if ( false !== $path ) {
+                while (false !== ($thumb = readdir($path))) {
+                    if (!(strrpos($thumb, $file_info['filename']) === false)) {
+                        $files[] = $thumb;
+                    }
+                }
+                closedir($path);
+                sort($files);
             }
-			closedir($path);
-			sort($files);
-			foreach ($files as $thumb) {
+            foreach ($files as $thumb) {
             	$thumb_fullpath = $file_info['dirname'] . DIRECTORY_SEPARATOR . $thumb;
             	$thumb_info = pathinfo($thumb_fullpath);
             	$valid_thumb = explode($file_info['filename'], $thumb_info['filename']);

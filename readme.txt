@@ -27,8 +27,14 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 == ChangeLog ==
 
-= 2.0.4 =
+= 2.0.6 =
 * Add PHP7 compatibility
+
+= 2.0.5 =
+* No timeout limit
+
+= 2.0.4 =
+* Fix issue when "opendir()" return FALSE (thanks Krody Robert)
 
 = 2.0.3 =
 * Add debug information on regenerate
@@ -41,7 +47,7 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 = 2.0.1 =
 * Fix issue with get_option('upload_path') in Wordpress 3.5+ (thanks @DavidLingren)
 
-= 2.0.0 =
+= 2.0.0 = 
 * Fix error handle
 
 = 1.8 =
@@ -67,7 +73,7 @@ See the [screenshots tab](http://wordpress.org/extend/plugins/force-regenerate-t
 
 = 1.1 =
 * Delete all custom image sizes when regenerate thumbnails
-* Notifies you when thumbnails was deleted
+* Notifies you when thumbnails was deleted 
 
 = 1.0 =
 * First release.
