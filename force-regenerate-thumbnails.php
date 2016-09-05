@@ -64,7 +64,7 @@ class ForceRegenerateThumbnails {
 	 * @access public
 	 * @since 1.0
 	 */
-	function ForceRegenerateThumbnails() {
+	function __construct() {
 
 		load_plugin_textdomain('force-regenerate-thumbnails', false, '/force-regenerate-thumbnails/localization');
     
