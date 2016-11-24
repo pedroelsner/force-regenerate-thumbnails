@@ -127,9 +127,6 @@ class ForceRegenerateThumbnails {
 	 */
 	function add_media_row_action($actions, $post) {
 
-		if ('image/' != substr($post->post_mime_type, 0, 6) || !current_user_can($this->capability))
-			return $actions;
-
 		$url = wp_nonce_url( admin_url( 'tools.php?page=force-regenerate-thumbnails&goback=1&ids=' . $post->ID ), 'force-regenerate-thumbnails' );
 		$actions['regenerate_thumbnails'] = '<a href="' . esc_url( $url ) . '" title="' . esc_attr( __( "Regenerate the thumbnails for this single image", 'force-regenerate-thumbnails' ) ) . '">' . __( 'Force Regenerate Thumbnails', 'force-regenerate-thumbnails' ) . '</a>';
 
@@ -451,10 +448,6 @@ class ForceRegenerateThumbnails {
 			if (is_null($image)) {
 				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
 			}
-
-			if ('attachment' != $image->post_type || 'image/' != substr($image->post_mime_type, 0, 6)) {
-				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
-        	}
 
 			if (!current_user_can($this->capability)) {
 				throw new Exception(__('Your user account does not have permission to regenerate images.', 'force-regenerate-thumbnails'));
