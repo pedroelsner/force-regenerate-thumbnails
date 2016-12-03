@@ -449,15 +449,15 @@ class ForceRegenerateThumbnails {
 			$image = get_post($id);
 
 			if (is_null($image)) {
-				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
+				throw new Exception(sprintf(__('Failed: %d is an invalid media ID.', 'force-regenerate-thumbnails'), $id));
 			}
 
-				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
 			if ('attachment' != $image->post_type || ('image/' != substr($image->post_mime_type, 0, 6) && 'application/pdf' != $image->post_mime_type)) {
+				throw new Exception(sprintf(__('Failed: %d is an invalid media ID.', 'force-regenerate-thumbnails'), $id));
         	}
 
 			if (!current_user_can($this->capability)) {
-				throw new Exception(__('Your user account does not have permission to regenerate images.', 'force-regenerate-thumbnails'));
+				throw new Exception(__('Your user account does not have permission to regenerate media.', 'force-regenerate-thumbnails'));
         	}
             
             
