@@ -129,6 +129,9 @@ class ForceRegenerateThumbnails {
 
 		if (('application/pdf' != $post->post_mime_type && 'image/' != substr($post->post_mime_type, 0, 6)) || !current_user_can($this->capability))
 			return $actions;
+			
+		if('application/pdf' == $post->post_mime_type  && !extension_loaded('imagick'))
+			return $actions;
 
 		$url = wp_nonce_url( admin_url( 'tools.php?page=force-regenerate-thumbnails&goback=1&ids=' . $post->ID ), 'force-regenerate-thumbnails' );
 		$actions['regenerate_thumbnails'] = '<a href="' . esc_url( $url ) . '" title="' . esc_attr( __( "Regenerate the thumbnails for this single image", 'force-regenerate-thumbnails' ) ) . '">' . __( 'Force Regenerate Thumbnails', 'force-regenerate-thumbnails' ) . '</a>';
@@ -242,9 +245,18 @@ class ForceRegenerateThumbnails {
 				// Directly querying the database is normally frowned upon, but all
 				// of the API functions will return the full post objects which will
 				// suck up lots of memory. This is best, just not as future proof.
-				if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' OR post_mime_type LIKE 'application/pdf' ORDER BY ID DESC")) {
-					echo '	<p>' . sprintf(__("Unable to find any images. Are you sure <a href='%s'>some exist</a>?", 'force-regenerate-thumbnails'), admin_url('upload.php?post_mime_type=image')) . "</p></div>";
-					return;
+				if (!$images) {
+					if (extension_loaded('imagick')) {
+						if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' OR post_mime_type LIKE 'application/pdf' ORDER BY ID DESC")) {
+							echo '	<p>' . sprintf(__("Unable to find any images or files pdf. Are you sure <a href='%s'>some exist</a>?", 'force-regenerate-thumbnails'), admin_url('upload.php')) . "</p></div>";
+							return;
+						}
+					} else  {		
+						if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' ORDER BY ID DESC")) {
+							echo '	<p>' . sprintf(__("Unable to find any images. Are you sure <a href='%s'>some exist</a>?", 'force-regenerate-thumbnails'), admin_url('upload.php?post_mime_type=image')) . "</p></div>";
+							return;
+						}
+					}
 				}
 
 				// Generate the list of IDs
@@ -454,6 +466,10 @@ class ForceRegenerateThumbnails {
 
 			if ('attachment' != $image->post_type || ('image/' != substr($image->post_mime_type, 0, 6) && 'application/pdf' != $image->post_mime_type)) {
 				throw new Exception(sprintf(__('Failed: %d is an invalid media ID.', 'force-regenerate-thumbnails'), $id));
+        	}
+        	
+        	if ('application/pdf' == $image->post_mime_type  && !extension_loaded('imagick')) {
+				throw new Exception(__('Failed: The imagick extension is required for PDF files.', 'force-regenerate-thumbnails'));	        	
         	}
 
 			if (!current_user_can($this->capability)) {
