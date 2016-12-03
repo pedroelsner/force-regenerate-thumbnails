@@ -127,7 +127,7 @@ class ForceRegenerateThumbnails {
 	 */
 	function add_media_row_action($actions, $post) {
 
-		if ('image/' != substr($post->post_mime_type, 0, 6) || !current_user_can($this->capability))
+		if (('application/pdf' != $post->post_mime_type && 'image/' != substr($post->post_mime_type, 0, 6)) || !current_user_can($this->capability))
 			return $actions;
 
 		$url = wp_nonce_url( admin_url( 'tools.php?page=force-regenerate-thumbnails&goback=1&ids=' . $post->ID ), 'force-regenerate-thumbnails' );
@@ -242,7 +242,7 @@ class ForceRegenerateThumbnails {
 				// Directly querying the database is normally frowned upon, but all
 				// of the API functions will return the full post objects which will
 				// suck up lots of memory. This is best, just not as future proof.
-				if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' ORDER BY ID DESC")) {
+				if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' OR post_mime_type LIKE 'application/pdf' ORDER BY ID DESC")) {
 					echo '	<p>' . sprintf(__("Unable to find any images. Are you sure <a href='%s'>some exist</a>?", 'force-regenerate-thumbnails'), admin_url('upload.php?post_mime_type=image')) . "</p></div>";
 					return;
 				}
@@ -452,8 +452,8 @@ class ForceRegenerateThumbnails {
 				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
 			}
 
-			if ('attachment' != $image->post_type || 'image/' != substr($image->post_mime_type, 0, 6)) {
 				throw new Exception(sprintf(__('Failed: %d is an invalid image ID.', 'force-regenerate-thumbnails'), $id));
+			if ('attachment' != $image->post_type || ('image/' != substr($image->post_mime_type, 0, 6) && 'application/pdf' != $image->post_mime_type)) {
         	}
 
 			if (!current_user_can($this->capability)) {
