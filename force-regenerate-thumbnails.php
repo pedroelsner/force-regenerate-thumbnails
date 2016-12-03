@@ -126,11 +126,12 @@ class ForceRegenerateThumbnails {
 	 * @since 1.0
 	 */
 	function add_media_row_action($actions, $post) {
-
+		global $wp_version;
+		
 		if (('application/pdf' != $post->post_mime_type && 'image/' != substr($post->post_mime_type, 0, 6)) || !current_user_can($this->capability))
 			return $actions;
-			
-		if('application/pdf' == $post->post_mime_type  && !extension_loaded('imagick'))
+
+		if('application/pdf' == $post->post_mime_type  && ( !extension_loaded('imagick') || version_compare( $wp_version, '4.7', '<')))
 			return $actions;
 
 		$url = wp_nonce_url( admin_url( 'tools.php?page=force-regenerate-thumbnails&goback=1&ids=' . $post->ID ), 'force-regenerate-thumbnails' );
@@ -215,7 +216,7 @@ class ForceRegenerateThumbnails {
 	 * @since 1.0
 	 */
 	function force_regenerate_interface() {
-
+		global $wp_version;
 		global $wpdb;
 		?>
 
@@ -246,7 +247,7 @@ class ForceRegenerateThumbnails {
 				// of the API functions will return the full post objects which will
 				// suck up lots of memory. This is best, just not as future proof.
 				if (!$images) {
-					if (extension_loaded('imagick')) {
+					if (extension_loaded('imagick') && version_compare( $wp_version, '4.7', '>')) {
 						if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' OR post_mime_type LIKE 'application/pdf' ORDER BY ID DESC")) {
 							echo '	<p>' . sprintf(__("Unable to find any images or files pdf. Are you sure <a href='%s'>some exist</a>?", 'force-regenerate-thumbnails'), admin_url('upload.php')) . "</p></div>";
 							return;
@@ -447,7 +448,8 @@ class ForceRegenerateThumbnails {
 	 * @since 1.0
 	 */
 	function ajax_process_image() {
-
+		global $wp_version;
+		
 		// No timeout limit
 		set_time_limit(0);
 	
@@ -470,6 +472,10 @@ class ForceRegenerateThumbnails {
         	
         	if ('application/pdf' == $image->post_mime_type  && !extension_loaded('imagick')) {
 				throw new Exception(__('Failed: The imagick extension is required for PDF files.', 'force-regenerate-thumbnails'));	        	
+        	}
+
+        	if ('application/pdf' == $image->post_mime_type  && extension_loaded('imagick') && version_compare( $wp_version, '4.7', '<')) {
+				throw new Exception(__('Failed: You must use WordPress 4.7 minimum to process PDF files.', 'force-regenerate-thumbnails'));	        	
         	}
 
 			if (!current_user_can($this->capability)) {
