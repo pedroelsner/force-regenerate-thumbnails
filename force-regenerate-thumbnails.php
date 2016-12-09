@@ -405,7 +405,7 @@ class ForceRegenerateThumbnails {
 	<form method="post" action="">
 		<?php wp_nonce_field('force-regenerate-thumbnails') ?>
 
-		<h3>All Thumbnails</h3>
+		<h3><?php _e('All Thumbnails', 'force-regenerate-thumbnails'); ?></h3>
 
 		<p><?php printf(__("Pressing the follow button, you can regenerate thumbnails for all images that you have uploaded to your blog.", 'force-regenerate-thumbnails'), admin_url('options-media.php')); ?></p>
 
@@ -415,7 +415,7 @@ class ForceRegenerateThumbnails {
 		</p>
 
 		</br>
-		<h3>Specific Thumbnails</h3>
+		<h3><?php _e('Specific Thumbnails', 'force-regenerate-thumbnails'); ?></h3>
 
 		<p><?php printf(__("You can regenerate all thumbnails for specific images from the <a href='%s'>Media</a> page. (WordPress 3.1+ only)", 'force-regenerate-thumbnails'), admin_url('upload.php')); ?></p>
 	</form>
