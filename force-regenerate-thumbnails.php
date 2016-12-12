@@ -247,7 +247,7 @@ class ForceRegenerateThumbnails {
 				// of the API functions will return the full post objects which will
 				// suck up lots of memory. This is best, just not as future proof.
 				if (!$images) {
-					if (extension_loaded('imagick') && version_compare( $wp_version, '4.7', '>')) {
+					if (extension_loaded('imagick') && version_compare( $wp_version, '4.7', '>=')) {
 						if (!$images = $wpdb->get_results("SELECT ID FROM $wpdb->posts WHERE post_type = 'attachment' AND post_mime_type LIKE 'image/%' OR post_mime_type LIKE 'application/pdf' ORDER BY ID DESC")) {
 							echo '	<p>' . sprintf(__("Unable to find any images or files pdf. Are you sure <a href='%s'>some exist</a>?", 'force-regenerate-thumbnails'), admin_url('upload.php')) . "</p></div>";
 							return;
